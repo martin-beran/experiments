@@ -107,7 +107,7 @@ template <class T> void display(T&& v)
     std::cout << v << ' ' << *p << std::endl;
 }
 
-int main(int argc, char* argv[])
+int main(int, char*[])
 {
     display(clonable_int(1));
     display(clonable_str("a"));

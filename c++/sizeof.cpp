@@ -105,7 +105,7 @@ public:
     long l;
 };
 
-int main(int argc, char* argv[])
+int main(int, char*[])
 {
     // sizes of types
     DISPLAY_SIZE(char);
