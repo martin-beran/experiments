@@ -101,16 +101,31 @@ int main()
     auto has_member_f =
         [](auto v) { return requires { &decltype(v)::type::f; }; };
 
-    std::cout << "s_none::f=" << has_member_v(tid<s_none>{}) << std::endl;
-    std::cout << "s_v::f=" << has_member_v(tid<s_v>{}) << std::endl;
-    std::cout << "s_f::f=" << has_member_v(tid<s_f>{}) << std::endl;
-    std::cout << "s_v_f::f=" << has_member_v(tid<s_v_f>{}) << std::endl;
+    std::cout << "s_none::v=" << has_member_v(tid<s_none>{}) << std::endl;
+    std::cout << "s_v::v=" << has_member_v(tid<s_v>{}) << std::endl;
+    std::cout << "s_f::v=" << has_member_v(tid<s_f>{}) << std::endl;
+    std::cout << "s_v_f::v=" << has_member_v(tid<s_v_f>{}) << std::endl;
 
     std::cout << "s_none::f=" << has_member_f(tid<s_none>{}) << std::endl;
     std::cout << "s_v::f=" << has_member_f(tid<s_v>{}) << std::endl;
     std::cout << "s_f::f=" << has_member_f(tid<s_f>{}) << std::endl;
     std::cout << "s_v_f::f=" << has_member_f(tid<s_v_f>{}) << std::endl;
 
+#define HAS_MEMBER(t, m) \
+    [](auto v) { \
+        return requires { &decltype(v)::type::m; }; \
+    }(std::type_identity<t>{})
+
+    std::cout << "With concepts, lambdas, and macros" << std::endl;
+    std::cout << "s_none::v=" << HAS_MEMBER(s_none, v) << std::endl;
+    std::cout << "s_v::v=" << HAS_MEMBER(s_v, v) << std::endl;
+    std::cout << "s_f::v=" << HAS_MEMBER(s_f, v) << std::endl;
+    std::cout << "s_v_f::v=" << HAS_MEMBER(s_v_f, v) << std::endl;
+
+    std::cout << "s_none::f=" << HAS_MEMBER(s_none, f) << std::endl;
+    std::cout << "s_v::f=" << HAS_MEMBER(s_v, f) << std::endl;
+    std::cout << "s_f::f=" << HAS_MEMBER(s_f, f) << std::endl;
+    std::cout << "s_v_f::f=" << HAS_MEMBER(s_v_f, f) << std::endl;
 #endif
 
     return 0;
