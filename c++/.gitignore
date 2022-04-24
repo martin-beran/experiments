@@ -1,4 +1,5 @@
 /class-clone
+/has_member
 /log_constr_destr_assign
 /multi_construct_tuple
 /sizeof
