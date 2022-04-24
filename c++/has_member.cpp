@@ -27,15 +27,31 @@ struct s_v_f {
     unsigned v;
 };
 
-template <class T, class = void> struct has_member_v: std::false_type {};
+template <class, class = void> struct has_member_v: std::false_type {};
 template <class T> struct has_member_v<T, std::void_t<decltype(&T::v)>>:
     std::true_type {};
 
-template <class T, class = void> struct has_member_f: std::false_type {};
+template <class, class = void> struct has_member_f: std::false_type {};
 template <class T> struct has_member_f<T, std::void_t<decltype(&T::f)>>:
     std::true_type {};
 
+#define DEF_HAS_MEMBER(m) \
+    template <class, class = void> \
+    struct m_has_member_##m: std::false_type {}; \
+    template <class T> \
+    struct m_has_member_##m<T, std::void_t<decltype(&T::m)>>: \
+        std::true_type {};
+
+DEF_HAS_MEMBER(v)
+DEF_HAS_MEMBER(f)
+
 #ifndef NO_CONCEPTS
+
+template <class T> inline constexpr bool c_has_member_v = requires { &T::v; };
+template <class T> inline constexpr bool c_has_member_f = requires { &T::f; };
+
+template <class T> using tid = std::type_identity<T>;
+
 #endif // NO_CONCEPTS
 
 int main()
@@ -52,8 +68,49 @@ int main()
     std::cout << "s_f::f=" << has_member_f<s_f>::value << std::endl;
     std::cout << "s_v_f::f=" << has_member_f<s_v_f>::value << std::endl;
 
+    std::cout << "No concepts with macros" << std::endl;
+
+    std::cout << "s_none::v=" << m_has_member_v<s_none>::value << std::endl;
+    std::cout << "s_v::v=" << m_has_member_v<s_v>::value << std::endl;
+    std::cout << "s_f::v=" << m_has_member_v<s_f>::value << std::endl;
+    std::cout << "s_v_f::v=" << m_has_member_v<s_v_f>::value << std::endl;
+
+    std::cout << "s_none::f=" << m_has_member_f<s_none>::value << std::endl;
+    std::cout << "s_v::f=" << m_has_member_f<s_v>::value << std::endl;
+    std::cout << "s_f::f=" << m_has_member_f<s_f>::value << std::endl;
+    std::cout << "s_v_f::f=" << m_has_member_f<s_v_f>::value << std::endl;
+
 #ifndef NO_CONCEPTS
+
     std::cout << "With concepts" << std::endl;
+
+    std::cout << "s_none::v=" << c_has_member_v<s_none> << std::endl;
+    std::cout << "s_v::v=" << c_has_member_v<s_v> << std::endl;
+    std::cout << "s_f::v=" << c_has_member_v<s_f> << std::endl;
+    std::cout << "s_v_f::v=" << c_has_member_v<s_v_f> << std::endl;
+
+    std::cout << "s_none::f=" << c_has_member_f<s_none> << std::endl;
+    std::cout << "s_v::f=" << c_has_member_f<s_v> << std::endl;
+    std::cout << "s_f::f=" << c_has_member_f<s_f> << std::endl;
+    std::cout << "s_v_f::f=" << c_has_member_f<s_v_f> << std::endl;
+
+    // This method allows defining l_has_member_* locally in a function
+    std::cout << "With concepts and lambdas" << std::endl;
+    auto has_member_v =
+        [](auto v) { return requires { &decltype(v)::type::v; }; };
+    auto has_member_f =
+        [](auto v) { return requires { &decltype(v)::type::f; }; };
+
+    std::cout << "s_none::f=" << has_member_v(tid<s_none>{}) << std::endl;
+    std::cout << "s_v::f=" << has_member_v(tid<s_v>{}) << std::endl;
+    std::cout << "s_f::f=" << has_member_v(tid<s_f>{}) << std::endl;
+    std::cout << "s_v_f::f=" << has_member_v(tid<s_v_f>{}) << std::endl;
+
+    std::cout << "s_none::f=" << has_member_f(tid<s_none>{}) << std::endl;
+    std::cout << "s_v::f=" << has_member_f(tid<s_v>{}) << std::endl;
+    std::cout << "s_f::f=" << has_member_f(tid<s_f>{}) << std::endl;
+    std::cout << "s_v_f::f=" << has_member_f(tid<s_v_f>{}) << std::endl;
+
 #endif
 
     return 0;
