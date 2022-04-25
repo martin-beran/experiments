@@ -94,7 +94,7 @@ template <class T> void display_realloc(std::string_view type,
 
 #define DISPLAY_REALLOC(type) display_realloc<type>(#type)
 
-template <template <class, class> class T>
+template <template <class ...> class T>
 void display_assoc_realloc(std::string_view type, size_t n = 10)
 {
     struct off {
@@ -147,6 +147,7 @@ int main(int, char*[])
     // DISPLAY_SIZE(std::variant<char, unsigned char>);
     DISPLAY_SIZE(decltype(std::variant<char, unsigned char>{}));
     DISPLAY_SIZE(decltype(std::variant<char, long long, std::string>{}));
+    DISPLAY_SIZE(std::any);
     DISPLAY_SIZE(std::unique_ptr<char>);
     DISPLAY_SIZE(std::shared_ptr<char>);
     DISPLAY_SIZE(std::weak_ptr<char>);

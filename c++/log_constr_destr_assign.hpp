@@ -9,6 +9,8 @@
 #include <optional>
 #include <string>
 
+// Move constructor and operator= are marked noexcept, because otherwise it
+// behaves in unexpected ways, e.g., when stored in a standard container
 template <const char* N> class cda {
 public:
     cda() { log(type_name, {}); }
@@ -16,7 +18,7 @@ public:
 	using namespace std::literals;
 	log(type_name, "const "s + type_name + "&"s, &o);
     }
-    cda(cda<N>&& o) {
+    cda(cda<N>&& o) noexcept {
 	using namespace std::literals;
 	log(type_name, type_name + "&&"s, &o);
     }
@@ -29,7 +31,7 @@ public:
 	log("operator=", "const "s + type_name + "&"s, &o);
 	return *this;
     }
-    cda<N>& operator=(cda<N>&& o) {
+    cda<N>& operator=(cda<N>&& o) noexcept {
 	using namespace std::literals;
 	log("operator=", type_name + "&&"s, &o);
 	return *this;
