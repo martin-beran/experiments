@@ -86,12 +86,37 @@ template <class T> void display_realloc(std::string_view type,
         new_called = false;
         o.push_back(typename T::value_type{});
         if (new_called)
-            std::cout << ' ' << ++reallocs << ':' << i << "->" << o.capacity();
+            std::cout << ' ' << ++reallocs << ':' << i << "->" <<
+                o.capacity();
     }
     std::cout << std::endl;
 }
 
 #define DISPLAY_REALLOC(type) display_realloc<type>(#type)
+
+template <template <class, class> class T>
+void display_assoc_realloc(std::string_view type, size_t n = 10)
+{
+    struct off {
+        ~off() { new_log = delete_log = false; }
+    } off;
+    {
+        T<size_t, char> o{};
+        std::cout << type << " reallocations at sizes:" << std::endl;
+        unsigned reallocs = 0;
+        new_log = true;
+        delete_log = true;
+        for (size_t i = 1; i <= n; ++i) {
+            new_called = false;
+            o[i] = 'x';
+            if (new_called)
+                std::cout << ' ' << ++reallocs << ':' << i << std::endl;
+        }
+    }
+    std::cout << "=====" << std::endl;
+}
+
+#define DISPLAY_ASSOC_REALLOC(type) display_assoc_realloc<type>(#type)
 
 template <class T> class alloc_c: public std::allocator<T> {
     using std::allocator<T>::allocator;
@@ -136,6 +161,9 @@ int main(int, char*[])
     DISPLAY_REALLOC(std::string);
     DISPLAY_REALLOC(std::vector<char>);
     DISPLAY_REALLOC(std::vector<long>);
+    DISPLAY_ASSOC_REALLOC(std::map);
+    DISPLAY_ASSOC_REALLOC(std::unordered_map);
+
     // allocations related to std::shared_ptr
     new_log = true;
     delete_log = true;
