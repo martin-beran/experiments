@@ -24,6 +24,7 @@ template <class T> void ff(T&& o)
 {
 }
 
+// additional copy for rvalue
 struct s_const {
     s_const(const test& t): t(t) {
         std::cout << this << "->s_const(const test&).t==" << &this->t <<
@@ -32,6 +33,7 @@ struct s_const {
     test t;
 };
 
+// most efficient
 struct s_rref {
     s_rref(const test& t): t(t) {
         std::cout << this << "->s_rref(const test&).t==" << &this->t <<
@@ -43,9 +45,18 @@ struct s_rref {
     test t;
 };
 
+// additional move for lvalue
 struct s_value {
     s_value(test t): t(std::move(t)) {
         std::cout << this << "->s_value(test).t=" << &this->t << std::endl;
+    }
+    test t;
+};
+
+// like s_rref, extensible to multiple parameters (with some code bloat)
+struct s_fwd {
+    template <class T> s_fwd(T&& t): t(std::forward<T>(t)) {
+        std::cout << this << "->s_fwd(test).t=" << &this->t << std::endl;
     }
     test t;
 };
@@ -121,6 +132,10 @@ int main(int, char*[])
     {
         s_value v{test{}};
     }
+    std::cout << "s_fwd" << std::endl;
+    {
+        s_fwd v{test{}};
+    }
     std::cout << "\nconstructed from lvalue" << std::endl;
     std::cout << "s_const" << std::endl;
     {
@@ -139,6 +154,12 @@ int main(int, char*[])
         test t;
         std::cout << "t" << std::endl;
         s_value v{t};
+    }
+    std::cout << "s_fwd" << std::endl;
+    {
+        test t;
+        std::cout << "t" << std::endl;
+        s_fwd v{t};
     }
     return 0;
 }
