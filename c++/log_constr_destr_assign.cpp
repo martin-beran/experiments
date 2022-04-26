@@ -24,6 +24,32 @@ template <class T> void ff(T&& o)
 {
 }
 
+struct s_const {
+    s_const(const test& t): t(t) {
+        std::cout << this << "->s_const(const test&).t==" << &this->t <<
+            std::endl;
+    }
+    test t;
+};
+
+struct s_rref {
+    s_rref(const test& t): t(t) {
+        std::cout << this << "->s_rref(const test&).t==" << &this->t <<
+            std::endl;
+    }
+    s_rref(test&& t): t(std::move(t)) {
+        std::cout << this << "->s_rref(test&&).t==" << &this->t << std::endl;
+    }
+    test t;
+};
+
+struct s_value {
+    s_value(test t): t(std::move(t)) {
+        std::cout << this << "->s_value(test).t=" << &this->t << std::endl;
+    }
+    test t;
+};
+
 int main(int, char*[])
 {
     std::cout << "objects" << std::endl;
@@ -81,6 +107,38 @@ int main(int, char*[])
         std::cout << "t<" << &std::get<0>(t) << ", " << &std::get<1>(t) <<
           '>' << std::endl;
         std::cout << "end of scope" << std::endl;
+    }
+    std::cout << "\nconstructed from rvalue" << std::endl;
+    std::cout << "s_const" << std::endl;
+    {
+        s_const v{test{}};
+    }
+    std::cout << "s_rref" << std::endl;
+    {
+        s_rref v{test{}};
+    }
+    std::cout << "s_value" << std::endl;
+    {
+        s_value v{test{}};
+    }
+    std::cout << "\nconstructed from lvalue" << std::endl;
+    std::cout << "s_const" << std::endl;
+    {
+        test t;
+        std::cout << "t" << std::endl;
+        s_const v{t};
+    }
+    std::cout << "s_rref" << std::endl;
+    {
+        test t;
+        std::cout << "t" << std::endl;
+        s_rref v{t};
+    }
+    std::cout << "s_value" << std::endl;
+    {
+        test t;
+        std::cout << "t" << std::endl;
+        s_value v{t};
     }
     return 0;
 }
