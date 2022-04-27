@@ -1,6 +1,7 @@
 /class_clone
 /has_member
 /log_constr_destr_assign
+/memory_order_seq_cst
 /memory_order_relaxed
 /multi_construct_tuple
 /sizeof
