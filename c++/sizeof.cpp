@@ -165,6 +165,62 @@ int main(int, char*[])
     DISPLAY_ASSOC_REALLOC(std::map);
     DISPLAY_ASSOC_REALLOC(std::unordered_map);
 
+    // reallocations of buckets in std::unordered_map
+    {
+        std::unordered_map<int, int> map;
+        std::cout << "unordered_map buckets max_load=" <<
+            map.max_load_factor() << std::endl;
+        size_t n = 1'000'000;
+        size_t bcnt0 = map.bucket_count();
+        for (size_t i = 0; i < n; ++i) {
+            map[i] = 10 * i;
+            size_t bcnt = map.bucket_count();
+            if (bcnt != bcnt0) {
+                std::cout << "i=" << i << " from=" << bcnt0 << " to=" << bcnt <<
+                    " load=" << map.load_factor() << std::endl;
+                bcnt0 = bcnt;
+            }
+        }
+        std::cout << "delete" << std::endl;
+        while (!map.empty()) {
+            map.erase(map.begin()->first);
+            size_t bcnt = map.bucket_count();
+            if (bcnt != bcnt0) {
+                std::cout << "size=" << map.size() << " from=" << bcnt0 <<
+                    " to=" << bcnt << " load=" << map.load_factor() <<
+                    std::endl;
+                bcnt0 = bcnt;
+            }
+        }
+        std::cout << "second fill" << std::endl;
+        for (size_t i = 0; i < n; ++i) {
+            map[i] = 10 * i;
+            size_t bcnt = map.bucket_count();
+            if (bcnt != bcnt0) {
+                std::cout << "i=" << i << " from=" << bcnt0 << " to=" << bcnt <<
+                    " load=" << map.load_factor() << std::endl;
+                bcnt0 = bcnt;
+            }
+        }
+        std::cout << "delete" << std::endl;
+        size_t sz = map.size();
+        while (!map.empty()) {
+            map.erase(map.begin()->first);
+            if (map.size() <= sz / 2) {
+                map.rehash(0);
+                sz = map.size();
+            }
+            size_t bcnt = map.bucket_count();
+            if (bcnt != bcnt0) {
+                std::cout << "size=" << map.size() << " from=" << bcnt0 <<
+                    " to=" << bcnt << " load=" << map.load_factor() <<
+                    std::endl;
+                bcnt0 = bcnt;
+            }
+        }
+        std::cout << "=====" << std::endl;
+    }
+
     // allocations related to std::shared_ptr
     new_log = true;
     delete_log = true;
