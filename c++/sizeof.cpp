@@ -7,6 +7,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <cstdint>
+#include <functional>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -158,6 +159,14 @@ int main(int, char*[])
     DISPLAY_SIZE(std::vector<int>);
     DISPLAY_SIZE(decltype(std::map<std::string, int>{}));
     DISPLAY_SIZE(decltype(std::unordered_map<std::string, int>{}));
+    DISPLAY_SIZE(decltype(std::function<void()>{}));
+    DISPLAY_SIZE(decltype(std::function<int()>{}));
+    DISPLAY_SIZE(decltype(std::function<int(int)>{}));
+    DISPLAY_SIZE(decltype(std::function<int(int, int)>{}));
+    DISPLAY_SIZE(decltype(std::function<int(int, int, int)>{}));
+    DISPLAY_SIZE(decltype(std::function<int(int, int, int, int)>{}));
+    DISPLAY_SIZE(decltype(std::function<int(std::string)>{}));
+    DISPLAY_SIZE(decltype(std::function<int(std::string, std::string)>{}));
     // reallocations in std containers
     DISPLAY_REALLOC(std::string);
     DISPLAY_REALLOC(std::vector<char>);
