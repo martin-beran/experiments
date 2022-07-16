@@ -10,6 +10,7 @@
 #include <any>
 #include <array>
 #include <iostream>
+#include <memory>
 #include <type_traits>
 #include <typeindex>
 #include <typeinfo>
@@ -136,6 +137,9 @@ int main() {
     display(data);
     std::cout << "--- big" << std::endl;
     data = data_big(4);
+    display(data);
+    std::cout << "--- std::shared_ptr" << std::endl;
+    data = std::shared_ptr<int>{};
     display(data);
     std::cout << "--- end" << std::endl;
     data.reset();
