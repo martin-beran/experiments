@@ -6,6 +6,7 @@
 /multi_construct_tuple
 /sizeof
 /std_any
+/template_lambda
 /tuple_for
 /tuple_for_20
 /unique_type
