@@ -1,4 +1,7 @@
-/* A template that generates a unique type on each use */
+/* A template that generates a unique type on each use
+ *
+ * Compile with C++20 or higher
+ */
 
 #include <type_traits>
 

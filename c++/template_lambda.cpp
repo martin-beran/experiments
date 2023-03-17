@@ -1,4 +1,7 @@
-/* A lambda that is itself a template, not just having a template operator() */
+/* A lambda that is itself a template, not just having a template operator()
+ *
+ * Compile with C++20 or higher
+ */
 
 #include <iostream>
 #include <list>
