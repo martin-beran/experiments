@@ -167,6 +167,42 @@ int main(int, char*[])
     DISPLAY_SIZE(decltype(std::function<int(int, int, int, int)>{}));
     DISPLAY_SIZE(decltype(std::function<int(std::string)>{}));
     DISPLAY_SIZE(decltype(std::function<int(std::string, std::string)>{}));
+    // Allocations in std::function
+    std::cout << "std::function captures" << std::endl;
+    new_log = true;
+    delete_log = true;
+    void* p1 = nullptr;
+    void* p2 = nullptr;
+    void* p3 = nullptr;
+    void* p4 = nullptr;
+    std::function<void()>{[]{
+        std::cout << "value=0" << std::endl;
+    }}();
+    std::function<void()>{[p1 = p1]() {
+        std::cout << "value=1" << std::endl;
+    }}();
+    std::function<void()>{[p1 = p1, p2 = p2]() {
+        std::cout << "value=2" << std::endl;
+    }}();
+    std::function<void()>{[p1 = p1, p2 = p2, p3 = p3]() {
+        std::cout << "value=3" << std::endl;
+    }}();
+    std::function<void()>{[p1 = p1, p2 = p2, p3 = p3, p4 = p4]() {
+        std::cout << "value=4" << std::endl;
+    }}();
+    std::function<void()>{[&p1]() {
+        std::cout << "ref=1" << std::endl;
+    }}();
+    std::function<void()>{[&p1, &p2]() {
+        std::cout << "ref=2" << std::endl;
+    }}();
+    std::function<void()>{[&p1, &p2, &p3]() {
+        std::cout << "ref=3" << std::endl;
+    }}();
+    std::function<void()>{[&p1, &p2, &p3, &p4]() {
+        std::cout << "ref=4" << std::endl;
+    }}();
+    new_log = false;
     // reallocations in std containers
     DISPLAY_REALLOC(std::string);
     DISPLAY_REALLOC(std::vector<char>);
