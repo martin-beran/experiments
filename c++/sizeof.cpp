@@ -205,6 +205,7 @@ int main(int, char*[])
     new_log = false;
     // reallocations in std containers
     DISPLAY_REALLOC(std::string);
+    DISPLAY_REALLOC(std::u16string);
     DISPLAY_REALLOC(std::vector<char>);
     DISPLAY_REALLOC(std::vector<long>);
     DISPLAY_ASSOC_REALLOC(std::map);
