@@ -12,15 +12,15 @@ constexpr char test_name[] = "test";
 class test: public cda<test_name> {
 };
 
-void fv(test o)
+void fv(test)
 {
 }
 
-void fr(test& o)
+void fr(test&)
 {
 }
 
-template <class T> void ff(T&& o)
+template <class T> void ff(T&&)
 {
 }
 

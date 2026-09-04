@@ -24,8 +24,8 @@ static_assert(!std::is_same_v<unique1, unique2>);
 int main()
 {
     same1 s1{1};
-    same2 s2 = s1;
-    unique1 u1{1};
+    [[maybe_unused]] same2 s2 = s1;
+    [[maybe_unused]] unique1 u1{1};
     // unique2 u2 = u1; // error, different type, no viable conversion exists
     return 0;
 }

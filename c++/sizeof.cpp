@@ -179,27 +179,47 @@ int main(int, char*[])
         std::cout << "value=0" << std::endl;
     }}();
     std::function<void()>{[p1 = p1]() {
+        (void) p1;
         std::cout << "value=1" << std::endl;
     }}();
     std::function<void()>{[p1 = p1, p2 = p2]() {
+        (void) p1;
+        (void) p2;
         std::cout << "value=2" << std::endl;
     }}();
     std::function<void()>{[p1 = p1, p2 = p2, p3 = p3]() {
+        (void) p1;
+        (void) p2;
+        (void) p3;
         std::cout << "value=3" << std::endl;
     }}();
     std::function<void()>{[p1 = p1, p2 = p2, p3 = p3, p4 = p4]() {
+        (void) p1;
+        (void) p2;
+        (void) p3;
+        (void) p4;
         std::cout << "value=4" << std::endl;
     }}();
     std::function<void()>{[&p1]() {
+        (void) p1;
         std::cout << "ref=1" << std::endl;
     }}();
     std::function<void()>{[&p1, &p2]() {
+        (void) p1;
+        (void) p2;
         std::cout << "ref=2" << std::endl;
     }}();
     std::function<void()>{[&p1, &p2, &p3]() {
+        (void) p1;
+        (void) p2;
+        (void) p3;
         std::cout << "ref=3" << std::endl;
     }}();
     std::function<void()>{[&p1, &p2, &p3, &p4]() {
+        (void) p1;
+        (void) p2;
+        (void) p3;
+        (void) p4;
         std::cout << "ref=4" << std::endl;
     }}();
     new_log = false;
@@ -213,7 +233,7 @@ int main(int, char*[])
 
     // reallocations of buckets in std::unordered_map
     {
-        std::unordered_map<int, int> map;
+        std::unordered_map<size_t, size_t> map;
         std::cout << "unordered_map buckets max_load=" <<
             map.max_load_factor() << std::endl;
         size_t n = 1'000'000;

@@ -71,7 +71,7 @@ void f_cons(std::memory_order mo)
             ++failures;
             std::cout << "data=" << d << " cnt=" << c <<
                 " failures=" << failures <<
-                " rate=" << (double(failures) / (i + 1)) << std::endl;
+                " rate=" << (double(failures) / double(i + 1)) << std::endl;
         }
     }
 }

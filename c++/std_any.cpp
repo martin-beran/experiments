@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <any>
 #include <array>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <type_traits>

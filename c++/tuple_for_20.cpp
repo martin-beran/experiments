@@ -56,7 +56,12 @@ template <class T> void out_tuple(T&& t) {
     for_each(std::forward<T>(t), out{});
 }
 
-int main(int argc, char* argv[])
+int main2(int, char*[])
+{
+    return 2;
+}
+
+int main([[maybe_unused]] int argc, [[maybe_unused]] char* argv[])
 {
     std::ostringstream save;
     save.copyfmt(std::cout);
@@ -65,8 +70,8 @@ int main(int argc, char* argv[])
     out_tuple(std::make_tuple(0));
     out_tuple(std::make_tuple(true, std::vector<int>{}));
     out_tuple(std::make_tuple("abc", 2, 'x'));
-    out_tuple(std::tuple{"abc", "d", 1.23e25, &main, 'x', false});
+    out_tuple(std::tuple{"abc", "d", 1.23e25, &main2, 'x', false});
     std::cout.copyfmt(save);
-    out_tuple(std::tuple{"abc", "d", 1.23e25, &main, 'x', false});
+    out_tuple(std::tuple{"abc", "d", 1.23e25, &main2, 'x', false});
     return EXIT_SUCCESS;
 }

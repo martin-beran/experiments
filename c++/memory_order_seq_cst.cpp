@@ -77,7 +77,7 @@ void f_read(cnt_t& a, cnt_t& b, std::memory_order mo, bool leader)
             if (ok == 0) {
                 ++failures;
                 std::cout << "cnt=" << expected << " failures=" << failures <<
-                    " rate=" << (double(failures) / expected) << std::endl;
+                    " rate=" << (double(failures) / double(expected)) << std::endl;
             }
             cnt_a = expected;
             cnt_b = expected;
