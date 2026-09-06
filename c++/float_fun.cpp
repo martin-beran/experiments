@@ -11,6 +11,7 @@
 #include <memory>
 #include <print>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 #include <typeinfo>
 #include <variant>
@@ -102,6 +103,7 @@ private:
 
 class type_impl {
 public:
+    using longdouble = long double;
     struct fun {
         fun_type f;
         fun_type std_f;
@@ -112,7 +114,7 @@ public:
         static const std::map<std::string_view, fun (*)(std::string_view)> t{
             INIT_TYPE_MAP(float)
             INIT_TYPE_MAP(double)
-            INIT_TYPE_MAP(long double)
+            INIT_TYPE_MAP(longdouble)
         };
         if (auto it = t.find(type); it != t.end())
             return it->second(name);
@@ -225,6 +227,11 @@ args_t process_cmdline(const cmdline_t& cmdline)
     return args;
 }
 
+std::string to_string(float_val f)
+{
+    return std::visit([](auto v){ return std::format("{}", v); }, f);
+}
+
 std::string demangle(const char* name)
 {
     int status = 0;
@@ -276,7 +283,7 @@ int main(int argc, char* argv[])
     try {
         cmdline_t cmdline(argc, argv);
         auto args = process_cmdline(cmdline);
-        (void) args;
+        println("arg1={}",to_string(args.arg1));
     } catch (const std::exception& e) {
         std::print(stderr, "Terminated by ");
         print_exception(e);
