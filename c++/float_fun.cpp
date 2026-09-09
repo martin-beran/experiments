@@ -57,20 +57,20 @@ template<class T> class fun_impl {
     template<auto F> static float_val std_fun2(float_val a, std::optional<float_val> b) {
         return F(std::get<T>(a), std::get<T>(*b));
     }
-    static T sqrt(T a) { return a; }
-    static T cbrt(T a) { return a; }
-    static T pow(T a, T b) { return a + b; }
-    static T sin(T a) { return a; }
-    static T cos(T a) { return a; }
-    static T tan(T a) { return a; }
-    static T asin(T a) { return a; }
-    static T acos(T a) { return a; }
-    static T atan(T a) { return a; }
-    static T exp(T a) { return a; }
-    static T exp2(T a) { return a; }
-    static T log(T a) { return a; }
-    static T log10(T a) { return a; }
-    static T log2(T a) { return a; }
+    static T sqrt(T a);
+    static T cbrt(T a);
+    static T pow(T a, T b);
+    static T sin(T a);
+    static T cos(T a);
+    static T tan(T a);
+    static T asin(T a);
+    static T acos(T a);
+    static T atan(T a);
+    static T exp(T a);
+    static T exp2(T a);
+    static T log(T a);
+    static T log10(T a);
+    static T log2(T a);
 public:
     static const fun_impl& get(std::string_view name) {
         static const std::map<std::string_view, fun_impl> f{
@@ -131,6 +131,78 @@ public:
             throw std::runtime_error(std::string{"Unknown type "}.append(type));
     }
 };
+
+/*** Implementation of mathematical functions ********************************/
+
+template<class T> T fun_impl<T>::sqrt(T a)
+{
+    return a;
+}
+
+template<class T> T fun_impl<T>::cbrt(T a)
+{
+    return a;
+}
+
+template<class T> T fun_impl<T>::pow(T a, T b)
+{
+    return a + b;
+}
+
+template<class T> T fun_impl<T>::sin(T a)
+{
+    return a;
+}
+
+template<class T> T fun_impl<T>::cos(T a)
+{
+    return a;
+}
+
+template<class T> T fun_impl<T>::tan(T a)
+{
+    return a;
+}
+
+template<class T> T fun_impl<T>::asin(T a)
+{
+    return a;
+}
+
+template<class T> T fun_impl<T>::acos(T a)
+{
+    return a;
+}
+
+template<class T> T fun_impl<T>::atan(T a)
+{
+    return a;
+}
+
+template<class T> T fun_impl<T>::exp(T a)
+{
+    return a;
+}
+
+template<class T> T fun_impl<T>::exp2(T a)
+{
+    return a;
+}
+
+template<class T> T fun_impl<T>::log(T a)
+{
+    return a;
+}
+
+template<class T> T fun_impl<T>::log10(T a)
+{
+    return a;
+}
+
+template<class T> T fun_impl<T>::log2(T a)
+{
+    return a;
+}
 
 /*** Command line processing *************************************************/
 
