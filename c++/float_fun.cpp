@@ -19,13 +19,9 @@
 
 namespace {
 
-struct cmdline_t {
-    std::string_view arg0;
-    std::vector<std::string_view> args;
-    cmdline_t(const int argc, const char* const argv[]):
-        arg0(argv[0]), args(argv + 1, argv + argc) {}
-};
+/*** Generic utilities *******************************************************/
 
+// Convert from text to a (numeric) value
 template<class T> T get_arg(std::string_view s) {
     T res;
     auto [ptr, ec] = std::from_chars(s.begin(), s.end(), res);
@@ -36,16 +32,23 @@ template<class T> T get_arg(std::string_view s) {
     return res;
 }
 
+/*** Defitions of functions and types ****************************************/
+
+// Supported floating point types
 using float_val = std::variant<float, double, long double>;
+
+// Convert a variant of floating point types to string
+std::string to_string(float_val f)
+{
+    return std::visit([](auto v){ return std::format("{}", v); }, f);
+}
+
+// Floating point function with one or two arguments
 using fun_type = float_val (*)(float_val, std::optional<float_val>);
 
+// Switch according to the requested function
 #define INIT_FUN_MAP1(f) {#f, fun_impl{&std_fun1<f>, &std_fun1<static_cast<T (*)(T)>(&std::f)>, false}},
 #define INIT_FUN_MAP2(f) {#f, fun_impl{&std_fun2<f>, &std_fun2<static_cast<T (*)(T, T)>(&std::f)>, true}},
-
-#define INIT_TYPE_MAP(t) {#t, [](std::string_view f){ \
-    decltype(auto) fi = fun_impl<t>::get(f); \
-    return fun{fi.fun, fi.std_fun, fi.has_arg2, fun_impl<t>::get_arg}; \
-}},
 
 template<class T> class fun_impl {
     template<auto F> static float_val std_fun1(float_val a, std::optional<float_val>) {
@@ -101,6 +104,12 @@ private:
     fun_impl(fun_type fun, fun_type std_fun, bool has_arg2): fun(fun), std_fun(std_fun), has_arg2(has_arg2) {}
 };
 
+// Switch according to the requested floating point type
+#define INIT_TYPE_MAP(t) {#t, [](std::string_view f){ \
+    decltype(auto) fi = fun_impl<t>::get(f); \
+    return fun{fi.fun, fi.std_fun, fi.has_arg2, fun_impl<t>::get_arg}; \
+}},
+
 class type_impl {
 public:
     using longdouble = long double;
@@ -123,6 +132,17 @@ public:
     }
 };
 
+/*** Command line processing *************************************************/
+
+// Unparsed command line arguments
+struct cmdline_t {
+    std::string_view arg0;
+    std::vector<std::string_view> args;
+    cmdline_t(const int argc, const char* const argv[]):
+        arg0(argv[0]), args(argv + 1, argv + argc) {}
+};
+
+// Parsed command line arguments
 struct args_t {
     std::string_view fun_s;
     std::string_view type_s;
@@ -133,6 +153,7 @@ struct args_t {
     std::optional<unsigned> iter;
 };
 
+// Print help
 void usage(std::string_view arg0)
 {
     std::println(R"(usage: {} function type arg1 [arg2] terms [iter]
@@ -164,6 +185,7 @@ iter: do this number of iterations and measure time
 )", arg0);
 }
 
+// Parse command line arguments
 args_t process_cmdline(const cmdline_t& cmdline)
 {
     args_t args{};
@@ -227,11 +249,9 @@ args_t process_cmdline(const cmdline_t& cmdline)
     return args;
 }
 
-std::string to_string(float_val f)
-{
-    return std::visit([](auto v){ return std::format("{}", v); }, f);
-}
+/*** Diagnostics *************************************************************/
 
+// Demangling C++ names
 std::string demangle(const char* name)
 {
     int status = 0;
@@ -266,6 +286,7 @@ std::string demangle(const char* name)
     }
 }
 
+// Print information from nested exceptions
 void print_exception(const std::exception& e, unsigned level = 0)
 {
     std::println(stderr, "{0}exception {1}: {2}", std::string(level, ' '), demangle(typeid(e).name()), e.what());
@@ -277,6 +298,8 @@ void print_exception(const std::exception& e, unsigned level = 0)
 }
 
 } // namespace
+
+/*** Main function ***********************************************************/
 
 int main(int argc, char* argv[])
 {
