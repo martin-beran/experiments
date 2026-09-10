@@ -2,11 +2,14 @@
  * from the standard library
  */
 
+#include <cassert>
 #include <charconv>
+#include <chrono>
 #include <cmath>
 #include <cstdlib>
 #include <cxxabi.h>
 #include <exception>
+#include <limits>
 #include <map>
 #include <memory>
 #include <print>
@@ -40,37 +43,48 @@ using float_val = std::variant<float, double, long double>;
 // Convert a variant of floating point types to string
 std::string to_string(float_val f)
 {
-    return std::visit([](auto v){ return std::format("{}", v); }, f);
+    return std::visit([]<class T>(T v){
+        return std::format("{0:+.{1}e}", v, std::numeric_limits<T>::max_digits10);
+    }, f);
 }
 
+// Floating point function with one or two arguments and number of series terms
+using fun_type = float_val (*)(float_val, std::optional<float_val>, unsigned terms);
+
 // Floating point function with one or two arguments
-using fun_type = float_val (*)(float_val, std::optional<float_val>);
+using std_fun_type = float_val (*)(float_val, std::optional<float_val>);
 
 // Switch according to the requested function
-#define INIT_FUN_MAP1(f) {#f, fun_impl{&std_fun1<f>, &std_fun1<static_cast<T (*)(T)>(&std::f)>, false}},
-#define INIT_FUN_MAP2(f) {#f, fun_impl{&std_fun2<f>, &std_fun2<static_cast<T (*)(T, T)>(&std::f)>, true}},
+#define INIT_FUN_MAP1(f) {#f, fun_impl{&fun1<f>, &std_fun1<static_cast<T (*)(T)>(&std::f)>, false}},
+#define INIT_FUN_MAP2(f) {#f, fun_impl{&fun2<f>, &std_fun2<static_cast<T (*)(T, T)>(&std::f)>, true}},
 
 template<class T> class fun_impl {
+    template<auto F> static float_val fun1(float_val a, std::optional<float_val>, unsigned terms) {
+        return F(std::get<T>(a), terms);
+    }
     template<auto F> static float_val std_fun1(float_val a, std::optional<float_val>) {
         return F(std::get<T>(a));
+    }
+    template<auto F> static float_val fun2(float_val a, std::optional<float_val> b, unsigned terms) {
+        return F(std::get<T>(a), std::get<T>(*b), terms);
     }
     template<auto F> static float_val std_fun2(float_val a, std::optional<float_val> b) {
         return F(std::get<T>(a), std::get<T>(*b));
     }
-    static T sqrt(T a);
-    static T cbrt(T a);
-    static T pow(T a, T b);
-    static T sin(T a);
-    static T cos(T a);
-    static T tan(T a);
-    static T asin(T a);
-    static T acos(T a);
-    static T atan(T a);
-    static T exp(T a);
-    static T exp2(T a);
-    static T log(T a);
-    static T log10(T a);
-    static T log2(T a);
+    static T sqrt(T a, unsigned terms);
+    static T cbrt(T a, unsigned terms);
+    static T pow(T a, T b, unsigned terms);
+    static T sin(T a, unsigned terms);
+    static T cos(T a, unsigned terms);
+    static T tan(T a, unsigned terms);
+    static T asin(T a, unsigned terms);
+    static T acos(T a, unsigned terms);
+    static T atan(T a, unsigned terms);
+    static T exp(T a, unsigned terms);
+    static T exp2(T a, unsigned terms);
+    static T log(T a, unsigned terms);
+    static T log10(T a, unsigned terms);
+    static T log2(T a, unsigned terms);
 public:
     static const fun_impl& get(std::string_view name) {
         static const std::map<std::string_view, fun_impl> f{
@@ -98,10 +112,10 @@ public:
         return ::get_arg<T>(s);
     }
     const fun_type fun;
-    const fun_type std_fun;
+    const std_fun_type std_fun;
     const bool has_arg2;
 private:
-    fun_impl(fun_type fun, fun_type std_fun, bool has_arg2): fun(fun), std_fun(std_fun), has_arg2(has_arg2) {}
+    fun_impl(fun_type fun, std_fun_type std_fun, bool has_arg2): fun(fun), std_fun(std_fun), has_arg2(has_arg2) {}
 };
 
 // Switch according to the requested floating point type
@@ -115,7 +129,7 @@ public:
     using longdouble = long double;
     struct fun {
         fun_type f;
-        fun_type std_f;
+        std_fun_type std_f;
         bool has_arg2;
         float_val (*get_arg)(std::string_view);
     };
@@ -134,74 +148,74 @@ public:
 
 /*** Implementation of mathematical functions ********************************/
 
-template<class T> T fun_impl<T>::sqrt(T a)
+template<class T> T fun_impl<T>::sqrt(T a, unsigned terms)
 {
-    return a;
+    return a + static_cast<T>(terms);
 }
 
-template<class T> T fun_impl<T>::cbrt(T a)
+template<class T> T fun_impl<T>::cbrt(T a, unsigned terms)
 {
-    return a;
+    return a + static_cast<T>(terms);
 }
 
-template<class T> T fun_impl<T>::pow(T a, T b)
+template<class T> T fun_impl<T>::pow(T a, T b, unsigned terms)
 {
-    return a + b;
+    return a + b + static_cast<T>(terms);
 }
 
-template<class T> T fun_impl<T>::sin(T a)
+template<class T> T fun_impl<T>::sin(T a, unsigned terms)
 {
-    return a;
+    return a + static_cast<T>(terms);
 }
 
-template<class T> T fun_impl<T>::cos(T a)
+template<class T> T fun_impl<T>::cos(T a, unsigned terms)
 {
-    return a;
+    return a + static_cast<T>(terms);
 }
 
-template<class T> T fun_impl<T>::tan(T a)
+template<class T> T fun_impl<T>::tan(T a, unsigned terms)
 {
-    return a;
+    return a + static_cast<T>(terms);
 }
 
-template<class T> T fun_impl<T>::asin(T a)
+template<class T> T fun_impl<T>::asin(T a, unsigned terms)
 {
-    return a;
+    return a + static_cast<T>(terms);
 }
 
-template<class T> T fun_impl<T>::acos(T a)
+template<class T> T fun_impl<T>::acos(T a, unsigned terms)
 {
-    return a;
+    return a + static_cast<T>(terms);
 }
 
-template<class T> T fun_impl<T>::atan(T a)
+template<class T> T fun_impl<T>::atan(T a, unsigned terms)
 {
-    return a;
+    return a + static_cast<T>(terms);
 }
 
-template<class T> T fun_impl<T>::exp(T a)
+template<class T> T fun_impl<T>::exp(T a, unsigned terms)
 {
-    return a;
+    return a + static_cast<T>(terms);
 }
 
-template<class T> T fun_impl<T>::exp2(T a)
+template<class T> T fun_impl<T>::exp2(T a, unsigned terms)
 {
-    return a;
+    return a + static_cast<T>(terms);
 }
 
-template<class T> T fun_impl<T>::log(T a)
+template<class T> T fun_impl<T>::log(T a, unsigned terms)
 {
-    return a;
+    return a + static_cast<T>(terms);
 }
 
-template<class T> T fun_impl<T>::log10(T a)
+template<class T> T fun_impl<T>::log10(T a, unsigned terms)
 {
-    return a;
+    return a + static_cast<T>(terms);
 }
 
-template<class T> T fun_impl<T>::log2(T a)
+template<class T> T fun_impl<T>::log2(T a, unsigned terms)
 {
-    return a;
+    return a + static_cast<T>(terms);
 }
 
 /*** Command line processing *************************************************/
@@ -216,13 +230,13 @@ struct cmdline_t {
 
 // Parsed command line arguments
 struct args_t {
-    std::string_view fun_s;
-    std::string_view type_s;
-    type_impl::fun fun;
-    float_val arg1;
-    std::optional<float_val> arg2;
-    unsigned terms;
-    std::optional<unsigned> iter;
+    std::string_view fun_s; // function name
+    std::string_view type_s; // type name
+    type_impl::fun fun; // function
+    float_val arg1; // the first argument (all functions)
+    std::optional<float_val> arg2; // the second argument (some functions)
+    unsigned terms; // the number of terms of the Taylor series
+    std::optional<unsigned long> iter; // the number of iterations (speed measurement)
 };
 
 // Print help
@@ -369,6 +383,54 @@ void print_exception(const std::exception& e, unsigned level = 0)
     }
 }
 
+/*** Test mathematical functions *********************************************/
+
+// Run function once, analyze precision
+void run_precision(const args_t& args)
+{
+    size_t terms_sz = std::format("{}", args.terms).size();
+    float_val std_res = args.fun.std_f(args.arg1, args.arg2);
+    for (unsigned i = 1; i <= args.terms; ++i) {
+        float_val res = args.fun.f(args.arg1, args.arg2, i);
+        float_val diff = std::visit([](auto s, auto r) -> float_val { return s - r; }, res, std_res);
+        float_val rel_diff = std::visit([](auto d, auto s) -> float_val { return d / s; }, diff, std_res);
+        std::println("{0:{1}} {2} {3} {4}", i, terms_sz, to_string(res), to_string(diff), to_string(rel_diff));
+    }
+    std::println("{0:{1}} {2}", "", terms_sz, to_string(std_res));
+}
+
+// Run function many times, analyze speed
+void run_time(const args_t& args)
+{
+    assert(args.iter > 0);
+    auto measure = [&args](std::string_view label, auto f) {
+        float_val last;
+        auto t0 = std::chrono::steady_clock::now();
+        for (unsigned i = 0; i < args.iter; ++i) {
+            float_val res;
+            if constexpr (requires { f(args.arg1, args.arg2); })
+                res = args.fun.std_f(args.arg1, args.arg2);
+            else
+                res = f(args.arg1, args.arg2, args.terms);
+            if (i > 0 && res != last)
+                throw std::runtime_error("Function value differs from previous iteration");
+            last = res;
+        }
+        auto t1 = std::chrono::steady_clock::now();
+        auto t = t1 - t0;
+        std::println("{0}({1}{2}) = {3}",
+                     label,
+                     to_string(args.arg1),
+                     args.arg2 ? ", " + to_string(*args.arg2) : "",
+                     to_string(last));
+        std::println("{0} {1} * {2:%S} s = {3:%S} s", label, *args.iter, t / decltype(t)::rep(*args.iter), t);
+        return t;
+    };
+    auto t_std = measure("std", args.fun.std_f);
+    auto t_fun = measure("fun", args.fun.f);
+    std::println("fun / std = {}", double(t_fun.count()) / double(t_std.count()));
+}
+
 } // namespace
 
 /*** Main function ***********************************************************/
@@ -378,7 +440,10 @@ int main(int argc, char* argv[])
     try {
         cmdline_t cmdline(argc, argv);
         auto args = process_cmdline(cmdline);
-        println("arg1={}",to_string(args.arg1));
+        if (args.iter)
+            run_time(args);
+        else
+            run_precision(args);
     } catch (const std::exception& e) {
         std::print(stderr, "Terminated by ");
         print_exception(e);
