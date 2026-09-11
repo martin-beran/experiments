@@ -74,7 +74,8 @@ template<class T> class fun_impl {
     template<auto F> static float_val std_fun2(float_val a, std::optional<float_val> b) {
         return F(std::get<T>(a), std::get<T>(*b));
     }
-    static T sqrt(T a, unsigned steps);
+    static T sqrt_newton(T a, unsigned steps);
+    static T sqrt_taylor(T a, unsigned steps);
     static T cbrt(T a, unsigned steps);
     static T pow(T a, T b, unsigned steps);
     static T sin(T a, unsigned steps);
@@ -91,7 +92,8 @@ template<class T> class fun_impl {
 public:
     static const fun_impl& get(std::string_view name) {
         static const std::map<std::string_view, fun_impl> f{
-            INIT_FUN_MAP1(sqrt,)
+            INIT_FUN_MAP1(sqrt, _newton)
+            INIT_FUN_MAP1(sqrt, _taylor)
             INIT_FUN_MAP1(cbrt,)
             INIT_FUN_MAP2(pow,)
             INIT_FUN_MAP1(sin,)
@@ -151,6 +153,21 @@ public:
 
 /*** Implementation of mathematical functions ********************************/
 
+/* Newton's (Heron's) method:
+ *
+ *       --                    1      x
+ * y = \/ x = lim  y :  y    = - (y + -- )
+ *            n->oo n    n+1   2   n  y
+ *                                     n
+ */
+template<class T> T fun_impl<T>::sqrt_newton(T a, unsigned steps)
+{
+    T res = a;
+    for (unsigned i = 0; i < steps; ++i)
+        res = T{1.0} / T{2.0} * (res + a / res);
+    return res;
+}
+
 /* Approximation by Taylor series:
  *
  *          inf
@@ -161,7 +178,7 @@ public:
  *          --- 4 (n!) (2n-1)
  *          n=0
  */
-template<class T> T fun_impl<T>::sqrt(T a, unsigned steps)
+template<class T> T fun_impl<T>::sqrt_taylor(T a, unsigned steps)
 {
     if (a < 0.0)
         return -NAN;
@@ -187,9 +204,20 @@ template<class T> T fun_impl<T>::sqrt(T a, unsigned steps)
     return inv ? T{1.0} / res : res;
 }
 
-template<class T> T fun_impl<T>::cbrt(T /*a*/, unsigned /*steps*/)
+/* Newton's method:
+ *
+ *     3  --                    1        x
+ * y =  \/ x = lim  y :  y    = - (2y + --- )
+ *             n->oo n    n+1   3    n    2
+ *                                       y
+ *                                        n
+ */
+template<class T> T fun_impl<T>::cbrt(T a, unsigned steps)
 {
-    return NAN;
+    T res = a;
+    for (unsigned i = 0; i < steps; ++i)
+        res = T{1.0} / T{3.0} * (2 * res + a / (res * res));
+    return res;
 }
 
 template<class T> T fun_impl<T>::pow(T /*a*/, T /*b*/, unsigned /*steps*/)
@@ -279,7 +307,8 @@ void usage(std::string_view arg0)
     std::println(R"(usage: {} function type arg1 [arg2] steps [iter]
 
 function:
-    sqrt arg1
+    sqrt_newton arg1 (Newton's/Heron's method)
+    sqrt_taylor arg1 (Taylor series)
     cbrt arg1
     pow arg1 arg2
     sin arg1
@@ -299,7 +328,7 @@ type:
     double
     longdouble
 
-steps: number of approximation steps (e.g,, terms of Taylor series)
+steps: number of approximation steps (0 for an initial approximation)
 
 iter: do this number of iterations and measure time
 )", arg0);
@@ -351,8 +380,6 @@ args_t process_cmdline(const cmdline_t& cmdline)
         fail("Missing steps");
     try {
         args.steps = get_arg<decltype(args.steps)>(cmdline.args[arg_i]);
-        if (args.steps <= 0)
-            fail("Steps must be greater than 0");
     } catch (...) {
         fail("Invalid steps");
     }
@@ -424,7 +451,7 @@ void run_precision(const args_t& args)
 {
     size_t steps_sz = std::format("{}", args.steps).size();
     float_val std_res = args.fun.std_f(args.arg1, args.arg2);
-    for (unsigned i = 1; i <= args.steps; ++i) {
+    for (unsigned i = 0; i <= args.steps; ++i) {
         float_val res = args.fun.f(args.arg1, args.arg2, i);
         float_val diff = std::visit([](auto s, auto r) -> float_val { return s - r; }, res, std_res);
         float_val rel_diff = std::visit([](auto d, auto s) -> float_val { return d / s; }, diff, std_res);
