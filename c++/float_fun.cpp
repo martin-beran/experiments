@@ -148,9 +148,37 @@ public:
 
 /*** Implementation of mathematical functions ********************************/
 
+//          inf
+//          ---     n-1
+//   ---     \  (-1)   (2n)!   n
+// \/1+x  =  /  ------------- x   converges for -1 < x < 1, 0 < 1+x < 2
+//          /    n    2
+//          --- 4 (n!) (2n-1)
+//          n=0
 template<class T> T fun_impl<T>::sqrt(T a, unsigned terms)
 {
-    return a + static_cast<T>(terms);
+    if (a < 0.0)
+        return -NAN;
+    if (a == 0.0)
+        return 0;
+    bool inv = a > 1.0;
+    T x = (inv ? T{1.0} / a : a) - T{1.0};
+    T res = 0.0;
+    T s = -1.0;
+    T f = 1.0;
+    T xn = 1.0;
+    T n4 = 1.0;
+    for (unsigned n = 0; n < terms; ++n) {
+        if (n > 0) {
+            // f *= (T{2.0} * T(n) - T{1.0}) * T{2.0} * T(n) / T(n) * T(n);
+            f *= (T{4.0} * T(n) - T{2.0}) / T(n);
+        }
+        res += s * f / n4 / (T{2.0} * T(n) - T{1.0}) * xn;
+        s = -s;
+        xn *= x;
+        n4 *= T{4.0};
+    }
+    return inv ? T{1.0} / res : res;
 }
 
 template<class T> T fun_impl<T>::cbrt(T a, unsigned terms)
