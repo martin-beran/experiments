@@ -290,9 +290,25 @@ template<class T> T fun_impl<T>::atan(T /*a*/, unsigned /*steps*/)
     return NAN;
 }
 
-template<class T> T fun_impl<T>::exp(T /*a*/, unsigned /*steps*/)
+/* Approximation by Taylor series:
+ *
+ *       oo
+ *      ---   n
+ *  x    \   x
+ * e  =  /  ---
+ *      /    n!
+ *      ---
+ *      n=0
+ */
+template<class T> T fun_impl<T>::exp(T a, unsigned steps)
 {
-    return NAN;
+    T res = 0.0;
+    T t = 1;
+    for (unsigned n = 1; n <= steps; ++n) {
+        res += t;
+        t *= a / T(n);
+    }
+    return res;
 }
 
 template<class T> T fun_impl<T>::exp2(T /*a*/, unsigned /*steps*/)
