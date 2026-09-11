@@ -12,6 +12,7 @@
 #include <limits>
 #include <map>
 #include <memory>
+#include <numbers>
 #include <print>
 #include <stdexcept>
 #include <string>
@@ -170,7 +171,7 @@ template<class T> T fun_impl<T>::sqrt_newton(T a, unsigned steps)
 
 /* Approximation by Taylor series:
  *
- *          inf
+ *           oo
  *          ---     n-1
  *   ---     \  (-1)   (2n)!   n
  * \/1+x  =  /  ------------- x   converges for -1 < x < 1, 0 < 1+x < 2
@@ -225,19 +226,53 @@ template<class T> T fun_impl<T>::pow(T /*a*/, T /*b*/, unsigned /*steps*/)
     return NAN;
 }
 
-template<class T> T fun_impl<T>::sin(T /*a*/, unsigned /*steps*/)
+/* Approximation by Taylor series:
+ *
+ *          oo
+ *         ---       n
+ *          \    (-1)     2n+1
+ * sin x =  /  --------- x
+ *         /   (2n + 1)!
+ *         ---
+ *         n=0
+ */
+template<class T> T fun_impl<T>::sin(T a, unsigned steps)
 {
-    return NAN;
+    a = std::fmod(a, T{2.0} * std::numbers::pi_v<T>);
+    T res = 0.0;
+    T t = a;
+    for (unsigned n = 1; n <= steps; ++n) {
+        res += t;
+        t = -t * a * a / ((T{2.0} * T(n)) * (T{2.0} * T(n) + T{1.0}));
+    }
+    return res;
 }
 
-template<class T> T fun_impl<T>::cos(T /*a*/, unsigned /*steps*/)
+/* Approximation by Taylor series:
+ *
+ *          oo
+ *         ---     n
+ *          \  (-1)   2n
+ * cos x =  /  ----- x
+ *         /   (2n)!
+ *         ---
+ *         n=0
+ */
+template<class T> T fun_impl<T>::cos(T a, unsigned steps)
 {
-    return NAN;
+    a = std::fmod(a, T{2.0} * std::numbers::pi_v<T>);
+    T res = 0.0;
+    T t = 1.0;
+    for (unsigned n = 1; n <= steps; ++n) {
+        res += t;
+        t = -t * a * a / ((T{2.0} * T(n) - T{1.0}) * (T{2.0} * T(n)));
+    }
+    return res;
 }
 
-template<class T> T fun_impl<T>::tan(T /*a*/, unsigned /*steps*/)
+template<class T> T fun_impl<T>::tan(T a, unsigned steps)
 {
-    return NAN;
+    return sin(a, steps) / cos(a, steps);
 }
 
 template<class T> T fun_impl<T>::asin(T /*a*/, unsigned /*steps*/)
