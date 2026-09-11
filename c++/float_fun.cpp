@@ -1,5 +1,5 @@
-/* Computing various functions using Taylor series compared to implementations
- * from the standard library
+/* Computing floating point functions using various approximation methods,
+ * compared to implementations from the standard library
  */
 
 #include <cassert>
@@ -48,60 +48,63 @@ std::string to_string(float_val f)
     }, f);
 }
 
-// Floating point function with one or two arguments and number of series terms
-using fun_type = float_val (*)(float_val, std::optional<float_val>, unsigned terms);
+// Floating point function with one or two arguments and number of approximation steps
+using fun_type = float_val (*)(float_val, std::optional<float_val>, unsigned steps);
 
 // Floating point function with one or two arguments
 using std_fun_type = float_val (*)(float_val, std::optional<float_val>);
 
 // Switch according to the requested function
-#define INIT_FUN_MAP1(f) {#f, fun_impl{&fun1<f>, &std_fun1<static_cast<T (*)(T)>(&std::f)>, false}},
-#define INIT_FUN_MAP2(f) {#f, fun_impl{&fun2<f>, &std_fun2<static_cast<T (*)(T, T)>(&std::f)>, true}},
+#define INIT_FUN_STR(f) #f
+#define INIT_FUN_MAP1(f, var) \
+    {INIT_FUN_STR(f ## var), fun_impl{&fun1<f ## var>, &std_fun1<static_cast<T (*)(T)>(&std::f)>, false}},
+#define INIT_FUN_MAP2(f, var) \
+    {INIT_FUN_STR(f ## var) , fun_impl{&fun2<f ## var>, &std_fun2<static_cast<T (*)(T, T)>(&std::f)>, true}},
 
 template<class T> class fun_impl {
-    template<auto F> static float_val fun1(float_val a, std::optional<float_val>, unsigned terms) {
-        return F(std::get<T>(a), terms);
+    template<auto F> static float_val fun1(float_val a, std::optional<float_val>, unsigned steps) {
+        return F(std::get<T>(a), steps);
     }
     template<auto F> static float_val std_fun1(float_val a, std::optional<float_val>) {
         return F(std::get<T>(a));
     }
-    template<auto F> static float_val fun2(float_val a, std::optional<float_val> b, unsigned terms) {
-        return F(std::get<T>(a), std::get<T>(*b), terms);
+    template<auto F> static float_val fun2(float_val a, std::optional<float_val> b, unsigned steps) {
+        return F(std::get<T>(a), std::get<T>(*b), steps);
     }
     template<auto F> static float_val std_fun2(float_val a, std::optional<float_val> b) {
         return F(std::get<T>(a), std::get<T>(*b));
     }
-    static T sqrt(T a, unsigned terms);
-    static T cbrt(T a, unsigned terms);
-    static T pow(T a, T b, unsigned terms);
-    static T sin(T a, unsigned terms);
-    static T cos(T a, unsigned terms);
-    static T tan(T a, unsigned terms);
-    static T asin(T a, unsigned terms);
-    static T acos(T a, unsigned terms);
-    static T atan(T a, unsigned terms);
-    static T exp(T a, unsigned terms);
-    static T exp2(T a, unsigned terms);
-    static T log(T a, unsigned terms);
-    static T log10(T a, unsigned terms);
-    static T log2(T a, unsigned terms);
+    static T sqrt(T a, unsigned steps);
+    static T cbrt(T a, unsigned steps);
+    static T pow(T a, T b, unsigned steps);
+    static T sin(T a, unsigned steps);
+    static T cos(T a, unsigned steps);
+    static T tan(T a, unsigned steps);
+    static T asin(T a, unsigned steps);
+    static T acos(T a, unsigned steps);
+    static T atan(T a, unsigned steps);
+    static T exp(T a, unsigned steps);
+    static T exp2(T a, unsigned steps);
+    static T log(T a, unsigned steps);
+    static T log10(T a, unsigned steps);
+    static T log2(T a, unsigned steps);
 public:
     static const fun_impl& get(std::string_view name) {
         static const std::map<std::string_view, fun_impl> f{
-            INIT_FUN_MAP1(sqrt)
-            INIT_FUN_MAP1(cbrt)
-            INIT_FUN_MAP2(pow)
-            INIT_FUN_MAP1(sin)
-            INIT_FUN_MAP1(cos)
-            INIT_FUN_MAP1(tan)
-            INIT_FUN_MAP1(asin)
-            INIT_FUN_MAP1(acos)
-            INIT_FUN_MAP1(atan)
-            INIT_FUN_MAP1(exp)
-            INIT_FUN_MAP1(exp2)
-            INIT_FUN_MAP1(log)
-            INIT_FUN_MAP1(log10)
-            INIT_FUN_MAP1(log2)
+            INIT_FUN_MAP1(sqrt,)
+            INIT_FUN_MAP1(cbrt,)
+            INIT_FUN_MAP2(pow,)
+            INIT_FUN_MAP1(sin,)
+            INIT_FUN_MAP1(cos,)
+            INIT_FUN_MAP1(tan,)
+            INIT_FUN_MAP1(asin,)
+            INIT_FUN_MAP1(acos,)
+            INIT_FUN_MAP1(atan,)
+            INIT_FUN_MAP1(exp,)
+            INIT_FUN_MAP1(exp2,)
+            INIT_FUN_MAP1(log,)
+            INIT_FUN_MAP1(log10,)
+            INIT_FUN_MAP1(log2,)
         };
         if (auto it = f.find(name); it != f.end())
             return it->second;
@@ -148,14 +151,17 @@ public:
 
 /*** Implementation of mathematical functions ********************************/
 
-//          inf
-//          ---     n-1
-//   ---     \  (-1)   (2n)!   n
-// \/1+x  =  /  ------------- x   converges for -1 < x < 1, 0 < 1+x < 2
-//          /    n    2
-//          --- 4 (n!) (2n-1)
-//          n=0
-template<class T> T fun_impl<T>::sqrt(T a, unsigned terms)
+/* Approximation by Taylor series:
+ *
+ *          inf
+ *          ---     n-1
+ *   ---     \  (-1)   (2n)!   n
+ * \/1+x  =  /  ------------- x   converges for -1 < x < 1, 0 < 1+x < 2
+ *          /    n    2
+ *          --- 4 (n!) (2n-1)
+ *          n=0
+ */
+template<class T> T fun_impl<T>::sqrt(T a, unsigned steps)
 {
     if (a < 0.0)
         return -NAN;
@@ -168,7 +174,7 @@ template<class T> T fun_impl<T>::sqrt(T a, unsigned terms)
     T f = 1.0;
     T xn = 1.0;
     T n4 = 1.0;
-    for (unsigned n = 0; n < terms; ++n) {
+    for (unsigned n = 0; n < steps; ++n) {
         if (n > 0) {
             // f *= (T{2.0} * T(n) - T{1.0}) * T{2.0} * T(n) / T(n) * T(n);
             f *= (T{4.0} * T(n) - T{2.0}) / T(n);
@@ -181,69 +187,69 @@ template<class T> T fun_impl<T>::sqrt(T a, unsigned terms)
     return inv ? T{1.0} / res : res;
 }
 
-template<class T> T fun_impl<T>::cbrt(T a, unsigned terms)
+template<class T> T fun_impl<T>::cbrt(T /*a*/, unsigned /*steps*/)
 {
-    return a + static_cast<T>(terms);
+    return NAN;
 }
 
-template<class T> T fun_impl<T>::pow(T a, T b, unsigned terms)
+template<class T> T fun_impl<T>::pow(T /*a*/, T /*b*/, unsigned /*steps*/)
 {
-    return a + b + static_cast<T>(terms);
+    return NAN;
 }
 
-template<class T> T fun_impl<T>::sin(T a, unsigned terms)
+template<class T> T fun_impl<T>::sin(T /*a*/, unsigned /*steps*/)
 {
-    return a + static_cast<T>(terms);
+    return NAN;
 }
 
-template<class T> T fun_impl<T>::cos(T a, unsigned terms)
+template<class T> T fun_impl<T>::cos(T /*a*/, unsigned /*steps*/)
 {
-    return a + static_cast<T>(terms);
+    return NAN;
 }
 
-template<class T> T fun_impl<T>::tan(T a, unsigned terms)
+template<class T> T fun_impl<T>::tan(T /*a*/, unsigned /*steps*/)
 {
-    return a + static_cast<T>(terms);
+    return NAN;
 }
 
-template<class T> T fun_impl<T>::asin(T a, unsigned terms)
+template<class T> T fun_impl<T>::asin(T /*a*/, unsigned /*steps*/)
 {
-    return a + static_cast<T>(terms);
+    return NAN;
 }
 
-template<class T> T fun_impl<T>::acos(T a, unsigned terms)
+template<class T> T fun_impl<T>::acos(T /*a*/, unsigned /*steps*/)
 {
-    return a + static_cast<T>(terms);
+    return NAN;
 }
 
-template<class T> T fun_impl<T>::atan(T a, unsigned terms)
+template<class T> T fun_impl<T>::atan(T /*a*/, unsigned /*steps*/)
 {
-    return a + static_cast<T>(terms);
+    return NAN;
 }
 
-template<class T> T fun_impl<T>::exp(T a, unsigned terms)
+template<class T> T fun_impl<T>::exp(T /*a*/, unsigned /*steps*/)
 {
-    return a + static_cast<T>(terms);
+    return NAN;
 }
 
-template<class T> T fun_impl<T>::exp2(T a, unsigned terms)
+template<class T> T fun_impl<T>::exp2(T /*a*/, unsigned /*steps*/)
 {
-    return a + static_cast<T>(terms);
+    return NAN;
 }
 
-template<class T> T fun_impl<T>::log(T a, unsigned terms)
+template<class T> T fun_impl<T>::log(T /*a*/, unsigned /*steps*/)
 {
-    return a + static_cast<T>(terms);
+    return NAN;
 }
 
-template<class T> T fun_impl<T>::log10(T a, unsigned terms)
+template<class T> T fun_impl<T>::log10(T /*a*/, unsigned /*steps*/)
 {
-    return a + static_cast<T>(terms);
+    return NAN;
 }
 
-template<class T> T fun_impl<T>::log2(T a, unsigned terms)
+template<class T> T fun_impl<T>::log2(T /*a*/, unsigned /*steps*/)
 {
-    return a + static_cast<T>(terms);
+    return NAN;
 }
 
 /*** Command line processing *************************************************/
@@ -263,14 +269,14 @@ struct args_t {
     type_impl::fun fun; // function
     float_val arg1; // the first argument (all functions)
     std::optional<float_val> arg2; // the second argument (some functions)
-    unsigned terms; // the number of terms of the Taylor series
+    unsigned steps; // the number of approximation steps
     std::optional<unsigned long> iter; // the number of iterations (speed measurement)
 };
 
 // Print help
 void usage(std::string_view arg0)
 {
-    std::println(R"(usage: {} function type arg1 [arg2] terms [iter]
+    std::println(R"(usage: {} function type arg1 [arg2] steps [iter]
 
 function:
     sqrt arg1
@@ -293,7 +299,7 @@ type:
     double
     longdouble
 
-terms: number of terms of Taylor series
+steps: number of approximation steps (e.g,, terms of Taylor series)
 
 iter: do this number of iterations and measure time
 )", arg0);
@@ -342,13 +348,13 @@ args_t process_cmdline(const cmdline_t& cmdline)
         }
     }
     if (cmdline.args.size() <= ++arg_i)
-        fail("Missing terms");
+        fail("Missing steps");
     try {
-        args.terms = get_arg<decltype(args.terms)>(cmdline.args[arg_i]);
-        if (args.terms <= 0)
-            fail("Terms must be greater than 0");
+        args.steps = get_arg<decltype(args.steps)>(cmdline.args[arg_i]);
+        if (args.steps <= 0)
+            fail("Steps must be greater than 0");
     } catch (...) {
-        fail("Invalid terms");
+        fail("Invalid steps");
     }
     if (cmdline.args.size() > ++arg_i)
         try {
@@ -416,15 +422,15 @@ void print_exception(const std::exception& e, unsigned level = 0)
 // Run function once, analyze precision
 void run_precision(const args_t& args)
 {
-    size_t terms_sz = std::format("{}", args.terms).size();
+    size_t steps_sz = std::format("{}", args.steps).size();
     float_val std_res = args.fun.std_f(args.arg1, args.arg2);
-    for (unsigned i = 1; i <= args.terms; ++i) {
+    for (unsigned i = 1; i <= args.steps; ++i) {
         float_val res = args.fun.f(args.arg1, args.arg2, i);
         float_val diff = std::visit([](auto s, auto r) -> float_val { return s - r; }, res, std_res);
         float_val rel_diff = std::visit([](auto d, auto s) -> float_val { return d / s; }, diff, std_res);
-        std::println("{0:{1}} {2} {3} {4}", i, terms_sz, to_string(res), to_string(diff), to_string(rel_diff));
+        std::println("{0:{1}} {2} {3} {4}", i, steps_sz, to_string(res), to_string(diff), to_string(rel_diff));
     }
-    std::println("{0:{1}} {2}", "", terms_sz, to_string(std_res));
+    std::println("{0:{1}} {2}", "", steps_sz, to_string(std_res));
 }
 
 // Run function many times, analyze speed
@@ -439,7 +445,7 @@ void run_time(const args_t& args)
             if constexpr (requires { f(args.arg1, args.arg2); })
                 res = args.fun.std_f(args.arg1, args.arg2);
             else
-                res = f(args.arg1, args.arg2, args.terms);
+                res = f(args.arg1, args.arg2, args.steps);
             if (i > 0 && res != last)
                 throw std::runtime_error("Function value differs from previous iteration");
             last = res;
