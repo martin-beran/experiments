@@ -221,9 +221,9 @@ template<class T> T fun_impl<T>::cbrt(T a, unsigned steps)
     return res;
 }
 
-template<class T> T fun_impl<T>::pow(T /*a*/, T /*b*/, unsigned /*steps*/)
+template<class T> T fun_impl<T>::pow(T a, T b, unsigned steps)
 {
-    return NAN;
+    return exp(log(a, steps) * b, steps);
 }
 
 /* Approximation by Taylor series:
@@ -241,6 +241,7 @@ template<class T> T fun_impl<T>::sin(T a, unsigned steps)
     a = std::fmod(a, T{2.0} * std::numbers::pi_v<T>);
     T res = 0.0;
     T t = a;
+    assert(steps < std::numeric_limits<decltype(args.steps)>::max());
     for (unsigned n = 1; n <= steps; ++n) {
         res += t;
         t = -t * a * a / ((T{2.0} * T(n)) * (T{2.0} * T(n) + T{1.0}));
@@ -263,6 +264,7 @@ template<class T> T fun_impl<T>::cos(T a, unsigned steps)
     a = std::fmod(a, T{2.0} * std::numbers::pi_v<T>);
     T res = 0.0;
     T t = 1.0;
+    assert(steps < std::numeric_limits<decltype(args.steps)>::max());
     for (unsigned n = 1; n <= steps; ++n) {
         res += t;
         t = -t * a * a / ((T{2.0} * T(n) - T{1.0}) * (T{2.0} * T(n)));
@@ -275,19 +277,65 @@ template<class T> T fun_impl<T>::tan(T a, unsigned steps)
     return sin(a, steps) / cos(a, steps);
 }
 
-template<class T> T fun_impl<T>::asin(T /*a*/, unsigned /*steps*/)
+/* Approximation by Taylor series:
+ *
+ *             oo
+ *            ---
+ *             \       (2n)!     2n+1
+ * arcsin x =  /  ------------- x
+ *            /    n    2
+ *            --- 4 (n!) (2n+1)
+ *            n=0
+ */
+template<class T> T fun_impl<T>::asin(T a, unsigned steps)
 {
-    return NAN;
+    if (a < -1 || a > 1)
+        return NAN;
+    T res = 0.0;
+    T t = a;
+    assert(steps < std::numeric_limits<decltype(args.steps)>::max());
+    for (unsigned n = 1; n <= steps; ++n) {
+        res += t / (T{2.0} * T(n) - T{1.0});
+        t *= (T{2.0} * T(n) - T{1.0}) * (T{2.0} * T(n)) / (4 * T(n) * T(n)) * a * a;
+    }
+    return res;
 }
 
-template<class T> T fun_impl<T>::acos(T /*a*/, unsigned /*steps*/)
+template<class T> T fun_impl<T>::acos(T a, unsigned steps)
 {
-    return NAN;
+    return std::numbers::pi_v<T> / T{2.0} - asin(a, steps);
 }
 
-template<class T> T fun_impl<T>::atan(T /*a*/, unsigned /*steps*/)
+/* Approximation by Taylor series:
+ *
+ *             oo
+ *            ---     n
+ *             \  (-1)   2n+1
+ * arctan x =  /  ----- x      converges for |x| <= 1
+ *            /   2n+1
+ *            ---
+ *            n=0
+ */
+template<class T> T fun_impl<T>::atan(T a, unsigned steps)
 {
-    return NAN;
+    T s = a < 0 ? -1.0 : 1.0;
+    if (s < 0)
+        a = -a;
+    bool inv = false;
+    if (a > 1) {
+        inv = true;
+        a = T{1.0} / a;
+    }
+    T res = 0.0;
+    T t = a;
+    assert(steps < std::numeric_limits<decltype(args.steps)>::max());
+    for (unsigned n = 1;  n <= steps; ++n) {
+        res += t / (T{2.0} * T(n) - T{1.0});
+        t *= -a * a;
+    }
+    if (inv)
+        res = std::numbers::pi_v<T> / T{2.0} - res;
+    return s * res;
 }
 
 /* Approximation by Taylor series:
@@ -304,6 +352,7 @@ template<class T> T fun_impl<T>::exp(T a, unsigned steps)
 {
     T res = 0.0;
     T t = 1;
+    assert(steps < std::numeric_limits<decltype(args.steps)>::max());
     for (unsigned n = 1; n <= steps; ++n) {
         res += t;
         t *= a / T(n);
@@ -311,24 +360,45 @@ template<class T> T fun_impl<T>::exp(T a, unsigned steps)
     return res;
 }
 
-template<class T> T fun_impl<T>::exp2(T /*a*/, unsigned /*steps*/)
+template<class T> T fun_impl<T>::exp2(T a, unsigned steps)
 {
-    return NAN;
+    return exp(a * std::numbers::ln2_v<T>, steps);
 }
 
-template<class T> T fun_impl<T>::log(T /*a*/, unsigned /*steps*/)
+/* Approximation by Taylor series:
+ *
+ *              oo
+ *             ---          n
+ *              \      n+1 x
+ * log(1+x)  =  /  (-1)    --   converges for -1 < x <= 1, 0 < 1+x <= 2
+ *             /           n
+ *             ---
+ *             n=1
+ */
+template<class T> T fun_impl<T>::log(T a, unsigned steps)
 {
-    return NAN;
+    if (a <= T{0.0})
+        return NAN;
+    bool inv = a > 1.0;
+    T x = (inv ? T{1.0} / a : a) - T{1.0};
+    T res = 0.0;
+    T xn = x;
+    assert(steps < std::numeric_limits<decltype(args.steps)>::max());
+    for (unsigned n = 1; n <= steps; ++n) {
+        res += xn / T(n);
+        xn *= -x;
+    }
+    return inv ? -res : res;
 }
 
-template<class T> T fun_impl<T>::log10(T /*a*/, unsigned /*steps*/)
+template<class T> T fun_impl<T>::log10(T a, unsigned steps)
 {
-    return NAN;
+    return log(a, steps) / std::numbers::ln10_v<T>;
 }
 
-template<class T> T fun_impl<T>::log2(T /*a*/, unsigned /*steps*/)
+template<class T> T fun_impl<T>::log2(T a, unsigned steps)
 {
-    return NAN;
+    return log(a, steps) / std::numbers::ln2_v<T>;
 }
 
 /*** Command line processing *************************************************/
@@ -431,6 +501,8 @@ args_t process_cmdline(const cmdline_t& cmdline)
         fail("Missing steps");
     try {
         args.steps = get_arg<decltype(args.steps)>(cmdline.args[arg_i]);
+        if (args.steps >= std::numeric_limits<decltype(args.steps)>::max())
+            throw std::range_error("Steps too big");
     } catch (...) {
         fail("Invalid steps");
     }
@@ -502,6 +574,7 @@ void run_precision(const args_t& args)
 {
     size_t steps_sz = std::format("{}", args.steps).size();
     float_val std_res = args.fun.std_f(args.arg1, args.arg2);
+    assert(steps < std::numeric_limits<decltype(args.steps)>::max());
     for (unsigned i = 0; i <= args.steps; ++i) {
         float_val res = args.fun.f(args.arg1, args.arg2, i);
         float_val diff = std::visit([](auto s, auto r) -> float_val { return s - r; }, res, std_res);
