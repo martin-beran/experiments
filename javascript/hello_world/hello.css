@@ -1,3 +1,59 @@
+html {
+    --line-style: solid;
+    --line-width: 1px;
+    --space: 1ex;
+}
+
+hr.w50 {
+    width: 30%;
+    margin-left: 0;
+}
+
 h1 {
-    color: blue
+    color: gray;
+}
+
+table {
+    border: calc(2 * var(--line-width)) var(--line-style);
+    border-collapse: collapse;
+    border-color: black;
+    border-spacing: 0;
+}
+
+table * {
+    border-color: inherit;
+    font-weight: normal;
+}
+
+thead, tfoot {
+    background-color: black;
+    color: white;
+}
+
+thead {
+    font-style: italic;
+}
+
+tfoot {
+    font-style: normal;
+}
+
+tr:nth-of-type(even) {
+    background-color: silver;
+}
+
+th, td {
+    text-align: center;
+    border: var(--line-width) var(--line-style);
+    padding: var(--space);
+}
+
+table#kv-table td:first-child {
+    border-color: inherit;
+    color: blue;
+}
+
+caption {
+    caption-side: bottom;
+    font-weight: bold;
 }
