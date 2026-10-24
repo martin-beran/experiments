@@ -75,7 +75,7 @@ th, td {
     padding: var(--space);
 }
 
-table#kv-table td:first-child {
+table#kv_table td:first-child {
     border-color: inherit;
     color: blue;
 }

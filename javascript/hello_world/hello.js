@@ -34,3 +34,20 @@ menus.forEach((m) => {
             alert(`Menu item ${i.textContent} selected`)
         });
 });
+
+const kv_table_data = [
+    { id: 1, key: "abc", value: 123 },
+    { id: 2, key: "bcd", value: 234 },
+    { id: 3, key: "cde", value: 345 },
+    { id: 4, key: "def", value: 456 }
+];
+const kv_table = document.querySelector("#kv_table tbody");
+for (var dr of kv_table_data) {
+    tr = document.createElement("tr");
+    kv_table.appendChild(tr);
+    for (var k of ["id", "key", "value"]) {
+        td = document.createElement("td");
+        tr.appendChild(td);
+        td.appendChild(document.createTextNode(dr[k]));
+    }
+}
