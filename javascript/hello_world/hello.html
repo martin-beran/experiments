@@ -2,7 +2,7 @@
 
 <html lang="en">
 <head>
-    <script src="hello.js"></script>
+    <script src="hello.js" defer></script>
     <link href="hello.css" rel="stylesheet">
     <title>Hello World!</title>
 </head>
@@ -12,6 +12,44 @@
 <h1>Hello World!</h1>
 
 <p>A sample HTML page</p>
+
+<h2>Controls</h2>
+
+<p>
+    <button id="button_alert">Alert</button>
+    <input type="checkbox" id="button_enable">Enable alert</input>
+</p>
+
+<p>
+    <button id="button_var">Click to change</button>
+</p>
+
+<div id="menu_bar">
+    <div class="menu_bar_item">
+        <button>Menu 1</button>
+        <div>
+            <div>Item 1.A</div>
+            <div>Item 1.B</div>
+            <div>Item 1.C</div>
+        </div>
+    </div>
+    <div class="menu_bar_item">
+        <button>Menu 2</button>
+        <div>
+            <div>Item 2.A</div>
+            <div>Item 2.B</div>
+            <div>Item 2.C</div>
+        </div>
+    </div>
+    <div class="menu_bar_item">
+        <button>Menu 3</button>
+        <div>
+            <div>Item 3.A</div>
+            <div>Item 3.B</div>
+            <div>Item 3.C</div>
+        </div>
+    </div>
+</div>
 
 <h2>Tables</h2>
 
@@ -24,7 +62,7 @@
 
 <hr class="w50">
 
-<table id='kv-table'>
+<table id="kv-table">
     <caption>KV table</caption>
     <thead>
         <tr><th>Id</th><th>Key</th><th>Value</th></tr>

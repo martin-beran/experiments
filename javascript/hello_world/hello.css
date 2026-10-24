@@ -13,6 +13,33 @@ h1 {
     color: gray;
 }
 
+#menu_bar > .menu_bar_item {
+    display: inline flow-root;
+}
+
+.menu_bar_item > div {
+    background-color: white;
+    position: absolute;
+}
+
+#menu_bar > div > div {
+    display: none;
+}
+
+#menu_bar > div > div > div {
+    border: solid 1px;
+    cursor: default;
+    padding: 1ex;
+}
+
+#menu_bar > div > div > div:hover {
+    background-color:silver;
+}
+
+#menu_bar > div > div.shown {
+    display: block;
+}
+
 table {
     border: calc(2 * var(--line-width)) var(--line-style);
     border-collapse: collapse;
