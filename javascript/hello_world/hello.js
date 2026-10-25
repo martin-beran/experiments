@@ -35,12 +35,43 @@ menus.forEach((m) => {
         });
 });
 
+class TableRow {
+    constructor() {
+        this.#data = {}
+    }
+    add(k, v) {
+        this.#data[k] = v;
+    }
+    get_val(k) {
+        return this.#data[k];
+    }
+    #data = null;
+}
+
+class KvTableRow extends TableRow {
+    constructor() {
+        super();
+        ++this.n_inst;
+    }
+    add(id, key, value) {
+        super.add('id', id);
+        super.add('key', key);
+        super.add('value', value);
+    }
+    static n_inst = 0;
+    static log_inst() {
+        console.log(`Number of KvTableRow instances = ${this.n_inst}`);
+    }
+}
+
 function TableData()
 {
     this.data = [];
 }
 TableData.prototype.add = function(id, key, value) {
-    this.data.push({id: id, key: key, value: value});
+    row = new KvTableRow();
+    row.add(id, key, value);
+    this.data.push(row);
     console.log(`add [${id}, ${key}, ${value}]`);
 }
 
@@ -61,6 +92,7 @@ kv_table_data.add(4, "def", 456)
 kv_table_data.add(5, "efg", 567)
 const kv_table_data2 = new KvTableData();
 kv_table_data2.add(0, "", 0);
+KvTableRow.log_inst();
 const kv_table = document.querySelector("#kv_table tbody");
 for (var dr of kv_table_data.data) {
     tr = document.createElement("tr");
@@ -68,6 +100,6 @@ for (var dr of kv_table_data.data) {
     for (var k of ["id", "key", "value"]) {
         td = document.createElement("td");
         tr.appendChild(td);
-        td.appendChild(document.createTextNode(dr[k]));
+        td.appendChild(document.createTextNode(dr.get_val(k)));
     }
 }
